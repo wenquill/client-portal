@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -32,6 +34,7 @@ function getInitials(name: string | null, email: string | undefined): string {
 }
 
 export function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
+  const router = useRouter();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -66,7 +69,7 @@ export function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem disabled>
+          <DropdownMenuItem onClick={() => router.push("/profile" as Route<string>)}>
             <User className="mr-2 h-4 w-4" />
             Profile
           </DropdownMenuItem>
