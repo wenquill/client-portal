@@ -143,6 +143,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           full_name: string | null
+          has_password: boolean
           id: string
           org_id: string
           role: Database["public"]["Enums"]["user_role"]
@@ -151,6 +152,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
+          has_password?: boolean
           id: string
           org_id: string
           role?: Database["public"]["Enums"]["user_role"]
@@ -159,6 +161,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
+          has_password?: boolean
           id?: string
           org_id?: string
           role?: Database["public"]["Enums"]["user_role"]

@@ -70,7 +70,7 @@ export default async function ProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SetPasswordForm />
+          <SetPasswordForm hasPassword={profile.has_password} />
         </CardContent>
       </Card>
     </div>
