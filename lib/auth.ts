@@ -44,6 +44,7 @@ export async function getAuthUser(): Promise<AuthUser> {
         : "client",
       full_name: fullName,
       avatar_url: avatarUrl,
+      email: user.email ?? null,
     });
 
     if (upsertError) {

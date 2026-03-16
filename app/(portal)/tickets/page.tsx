@@ -32,6 +32,54 @@ function formatPriority(priority: TicketPriority): string {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
 }
 
+function formatAssigneeLabel(
+  assigneeId: string | null,
+  assigneeName: string | null | undefined,
+): string {
+  if (!assigneeId) {
+    return "Unassigned";
+  }
+
+  if (assigneeName && assigneeName.trim().length > 0) {
+    return assigneeName;
+  }
+
+  return `User ${assigneeId.slice(0, 8)}`;
+}
+
+function formatAssigneeEmail(
+  assigneeId: string | null,
+  assigneeEmail: string | null | undefined,
+): string | null {
+  if (!assigneeId) {
+    return null;
+  }
+
+  if (assigneeEmail && assigneeEmail.trim().length > 0) {
+    return assigneeEmail;
+  }
+
+  return null;
+}
+
+function assigneeInitials(label: string): string {
+  if (label === "Unassigned") {
+    return "--";
+  }
+
+  const parts = label
+    .split(" ")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (parts.length === 0) {
+    return "U";
+  }
+
+  return parts.map((item) => item[0]?.toUpperCase() ?? "").join("");
+}
+
 function parseSearchParam(
   value: string | string[] | undefined,
 ): string | undefined {
@@ -88,7 +136,7 @@ export default async function TicketsPage({
   let query = supabase
     .from("tickets")
     .select(
-      "id,title,status,priority,created_at,assignee_id,assignee:users!tickets_assignee_id_fkey(full_name),created_by_user:users!tickets_created_by_fkey(full_name)",
+      "id,title,status,priority,created_at,assignee_id,assignee:users!tickets_assignee_id_fkey(full_name,email,avatar_url),created_by_user:users!tickets_created_by_fkey(full_name)",
       { count: "exact" },
     )
     .eq("org_id", authUser.organization.id);
@@ -242,9 +290,9 @@ export default async function TicketsPage({
                 const assignee = Array.isArray(ticket.assignee)
                   ? ticket.assignee[0]
                   : ticket.assignee;
-                const assigneeLabel = ticket.assignee_id
-                  ? (assignee?.full_name ?? "Assigned")
-                  : "Unassigned";
+                const assigneeLabel = formatAssigneeLabel(ticket.assignee_id, assignee?.full_name);
+                const assigneeEmail = formatAssigneeEmail(ticket.assignee_id, assignee?.email);
+                const assigneeAvatar = assignee?.avatar_url ?? null;
 
                 return (
                   <TableRow key={ticket.id}>
@@ -255,7 +303,27 @@ export default async function TicketsPage({
                     </TableCell>
                     <TableCell>{formatStatus(ticket.status)}</TableCell>
                     <TableCell className="capitalize">{ticket.priority}</TableCell>
-                    <TableCell>{assigneeLabel}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {assigneeAvatar ? (
+                          <img
+                            src={assigneeAvatar}
+                            alt={assigneeLabel}
+                            className="h-6 w-6 rounded-full border object-cover"
+                          />
+                        ) : (
+                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                            {assigneeInitials(assigneeLabel)}
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate">{assigneeLabel}</p>
+                          {assigneeEmail && (
+                            <p className="truncate text-xs text-muted-foreground">{assigneeEmail}</p>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {new Intl.DateTimeFormat("en-US", {
                         dateStyle: "medium",
