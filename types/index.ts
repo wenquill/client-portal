@@ -26,4 +26,5 @@ export type AuthUser = {
   email: string | undefined;
   profile: UserProfile;
   organization: Organization;
+  availableOrganizations: Organization[];
 };

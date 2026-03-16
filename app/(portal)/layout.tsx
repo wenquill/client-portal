@@ -1,4 +1,5 @@
 import { getAuthUser } from "@/lib/auth";
+import { OrgSwitcher } from "@/components/layout/org-switcher";
 import { Sidebar } from "@/components/layout/sidebar";
 import { UserMenu } from "@/components/layout/user-menu";
 
@@ -18,7 +19,10 @@ export default async function PortalLayout({
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-6">
-          <div />
+          <OrgSwitcher
+            currentOrgId={authUser.organization.id}
+            organizations={authUser.availableOrganizations}
+          />
           <UserMenu
             fullName={authUser.profile.full_name}
             email={authUser.email}

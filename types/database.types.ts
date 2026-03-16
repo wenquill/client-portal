@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_organizations: {
+        Row: {
+          created_at: string
+          org_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          org_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          org_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_organizations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_organizations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           author_id: string

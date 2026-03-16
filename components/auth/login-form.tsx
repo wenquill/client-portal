@@ -11,9 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Chrome, KeyRound, UserPlus } from "lucide-react";
+import { Mail, Chrome, KeyRound } from "lucide-react";
 
 const magicLinkSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -24,21 +25,8 @@ const passwordSignInSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-const passwordSignUpSchema = z
-  .object({
-    fullName: z.string().min(2, "Please enter your full name"),
-    email: z.string().email("Please enter a valid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Please confirm your password"),
-  })
-  .refine((values) => values.password === values.confirmPassword, {
-    message: "Passwords must match",
-    path: ["confirmPassword"],
-  });
-
 type MagicLinkForm = z.infer<typeof magicLinkSchema>;
 type PasswordSignInForm = z.infer<typeof passwordSignInSchema>;
-type PasswordSignUpForm = z.infer<typeof passwordSignUpSchema>;
 
 export function LoginForm() {
   const router = useRouter();
@@ -53,16 +41,6 @@ export function LoginForm() {
   const signInForm = useForm<PasswordSignInForm>({
     resolver: zodResolver(passwordSignInSchema),
     defaultValues: { email: "", password: "" },
-  });
-
-  const signUpForm = useForm<PasswordSignUpForm>({
-    resolver: zodResolver(passwordSignUpSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
   });
 
   async function onMagicLink(values: MagicLinkForm) {
@@ -98,47 +76,6 @@ export function LoginForm() {
     toast.success("Signed in successfully");
     router.push("/dashboard");
     router.refresh();
-  }
-
-  async function onPasswordSignUp(values: PasswordSignUpForm) {
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-        data: {
-          full_name: values.fullName,
-          role: "client",
-        },
-      },
-    });
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    const looksLikeExistingUser =
-      !!data.user &&
-      Array.isArray(data.user.identities) &&
-      data.user.identities.length === 0;
-
-    if (looksLikeExistingUser) {
-      toast.info(
-        "This email already exists. If you registered with Google, use Google sign-in or magic link.",
-      );
-      return;
-    }
-
-    if (data.session) {
-      toast.success("Account created. You are now signed in.");
-      router.push("/dashboard");
-      router.refresh();
-      return;
-    }
-
-    toast.success("Account created. Check your email inbox/spam to confirm, then sign in.");
   }
 
   async function onGoogleSignIn() {
@@ -185,7 +122,7 @@ export function LoginForm() {
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Sign in</TabsTrigger>
-            <TabsTrigger value="signup">Create account</TabsTrigger>
+            <TabsTrigger value="access">Get access</TabsTrigger>
           </TabsList>
 
           <TabsContent value="signin" className="pt-3">
@@ -271,75 +208,16 @@ export function LoginForm() {
             )}
           </TabsContent>
 
-          <TabsContent value="signup" className="pt-3">
-            <Form {...signUpForm}>
-              <form onSubmit={signUpForm.handleSubmit(onPasswordSignUp)} className="space-y-3">
-                <FormField
-                  control={signUpForm.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full name</FormLabel>
-                      <FormControl>
-                        <Input type="text" placeholder="Jane Doe" autoComplete="name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={signUpForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={signUpForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="At least 8 characters" autoComplete="new-password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={signUpForm.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="Repeat your password" autoComplete="new-password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={signUpForm.formState.isSubmitting}
-                >
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  {signUpForm.formState.isSubmitting ? "Creating account..." : "Create account"}
-                </Button>
-              </form>
-            </Form>
+          <TabsContent value="access" className="space-y-4 pt-3">
+            <Badge variant="secondary">Invite only</Badge>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Accounts are provisioned by organization admins. Ask your admin to invite you to a specific client organization.
+              </p>
+              <p>
+                Once invited, you can sign in with the invited email using Google, a magic link, or set a password later in profile settings.
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>
