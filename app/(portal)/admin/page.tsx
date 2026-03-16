@@ -3,16 +3,30 @@ import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InviteUserForm } from "@/components/admin/invite-user-form";
+import { AdminOrgAccessForm } from "@/components/admin/admin-org-access-form";
+import { CreateOrganizationForm } from "@/components/admin/create-organization-form";
 import { getAuthUser } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Admin" };
 
 export default async function AdminPage() {
   const authUser = await getAuthUser();
+  const admin = createAdminClient();
 
   if (authUser.profile.role !== "admin") {
     redirect("/dashboard");
   }
+
+  const { data: allOrganizations } = await admin
+    .from("organizations")
+    .select("*")
+    .order("name", { ascending: true });
+
+  const accessibleOrgIds = new Set(authUser.availableOrganizations.map((item) => item.id));
+  const addableOrganizations = (allOrganizations ?? []).filter(
+    (organization) => !accessibleOrgIds.has(organization.id),
+  );
 
   return (
     <div className="space-y-6">
@@ -22,6 +36,18 @@ export default async function AdminPage() {
           Invite users into a specific organization and manage your accessible tenants.
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Create organization</CardTitle>
+          <CardDescription>
+            Create a new client organization and add it to your switcher access.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CreateOrganizationForm />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -36,6 +62,18 @@ export default async function AdminPage() {
               {organization.name}
             </Badge>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Add organization access</CardTitle>
+          <CardDescription>
+            Add a client organization to your admin scope so it appears in the org switcher.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AdminOrgAccessForm availableOrganizations={addableOrganizations} />
         </CardContent>
       </Card>
 

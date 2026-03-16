@@ -35,6 +35,7 @@ export function InviteUserForm({ organizations, defaultOrgId }: InviteUserFormPr
   const [isPending, startTransition] = useTransition();
   const [selectedRole, setSelectedRole] = useState<UserRole>("client");
   const [selectedOrgId, setSelectedOrgId] = useState(defaultOrgId);
+  const selectedOrganizationName = organizations.find((item) => item.id === selectedOrgId)?.name;
 
   const form = useForm<InviteUserFormValues>({
     resolver: zodResolver(inviteUserSchema),
@@ -124,7 +125,9 @@ export function InviteUserForm({ organizations, defaultOrgId }: InviteUserFormPr
           <div>
             <Select value={selectedOrgId} onValueChange={(value) => value && setSelectedOrgId(value)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {selectedOrganizationName ?? "Select organization"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {organizations.map((organization) => (

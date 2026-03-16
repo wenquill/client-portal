@@ -15,6 +15,7 @@ interface OrgSwitcherProps {
 export function OrgSwitcher({ currentOrgId, organizations }: OrgSwitcherProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const currentOrganizationName = organizations.find((item) => item.id === currentOrgId)?.name;
 
   if (organizations.length <= 1) {
     return (
@@ -46,7 +47,9 @@ export function OrgSwitcher({ currentOrgId, organizations }: OrgSwitcherProps) {
         }}
       >
         <SelectTrigger className="w-full" disabled={isPending}>
-          <SelectValue />
+          <SelectValue>
+            {currentOrganizationName ?? "Select organization"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {organizations.map((organization) => (
