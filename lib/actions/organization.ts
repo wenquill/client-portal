@@ -99,101 +99,11 @@ export async function addAdminOrganizationAccess(orgId: string) {
   return { success: true };
 }
 
-function slugifyOrganizationName(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
 export async function createOrganization(input: { name: string; logoUrl?: string | null }) {
-  const supabase = await createClient();
-  const admin = createAdminClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: "Unauthorized" };
-  }
-
-  const { data: actor, error: actorError } = await admin
-    .from("users")
-    .select("id, role")
-    .eq("id", user.id)
-    .single();
-
-  if (actorError || !actor || actor.role !== "admin") {
-    return { error: "Only admins can create organizations" };
-  }
-
-  const name = input.name.trim();
-  if (name.length < 2) {
-    return { error: "Organization name must be at least 2 characters" };
-  }
-
-  const logoUrl = input.logoUrl?.trim() ? input.logoUrl.trim() : null;
-  const baseSlug = slugifyOrganizationName(name);
-
-  if (!baseSlug) {
-    return { error: "Organization name must contain letters or numbers" };
-  }
-
-  let slug = baseSlug;
-  let suffix = 2;
-
-  for (;;) {
-    const { data: existing } = await admin
-      .from("organizations")
-      .select("id")
-      .eq("slug", slug)
-      .maybeSingle();
-
-    if (!existing) {
-      break;
-    }
-
-    slug = `${baseSlug}-${suffix}`;
-    suffix += 1;
-  }
-
-  const { data: created, error: createError } = await admin
-    .from("organizations")
-    .insert({
-      name,
-      slug,
-      logo_url: logoUrl,
-    })
-    .select("id")
-    .single();
-
-  if (createError || !created) {
-    return { error: createError?.message ?? "Could not create organization" };
-  }
-
-  const { error: accessError } = await admin
-    .from("admin_organizations")
-    .insert({ user_id: actor.id, org_id: created.id });
-
-  if (accessError && accessError.code !== "23505") {
-    return { error: accessError.message };
-  }
-
-  const cookieStore = await cookies();
-  cookieStore.set(ACTIVE_ORG_COOKIE, created.id, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  });
-
-  revalidatePath("/admin");
-  revalidatePath("/organization");
-  revalidatePath("/dashboard");
-  revalidatePath("/tickets");
-  return { success: true, organizationId: created.id };
+  void input;
+  return {
+    error: "Organization provisioning is handled by the platform team.",
+  };
 }
 
 export type UpdateOrganizationState = {

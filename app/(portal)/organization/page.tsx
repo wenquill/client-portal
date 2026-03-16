@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getAuthUser } from "@/lib/auth";
 import { updateOrganizationAction } from "@/lib/actions/organization";
 import { UpdateOrganizationForm } from "@/components/organization/update-organization-form";
-import { CreateOrganizationForm } from "@/components/admin/create-organization-form";
 import { AdminOrgAccessForm } from "@/components/admin/admin-org-access-form";
 import { InviteUserForm } from "@/components/admin/invite-user-form";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -102,18 +101,6 @@ export default async function OrganizationPage() {
                 currentOrgId={organization.id}
                 currentOrgName={organization.name}
               />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Create organization</CardTitle>
-              <CardDescription>
-                Create a new client organization and add it to your switcher access.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CreateOrganizationForm />
             </CardContent>
           </Card>
 

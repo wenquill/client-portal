@@ -6,7 +6,6 @@ import type { Route } from "next";
 import {
   LayoutDashboard,
   Ticket,
-  Settings,
   Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,10 +17,6 @@ const navItems = [
   { href: "/organization", label: "Organization", icon: Building2 },
 ];
 
-const adminItems = [
-  { href: "/admin", label: "Admin", icon: Settings },
-];
-
 interface SidebarNavProps {
   role: UserRole;
 }
@@ -29,7 +24,7 @@ interface SidebarNavProps {
 export function SidebarNav({ role }: SidebarNavProps) {
   const pathname = usePathname();
 
-  const items = role === "admin" ? [...navItems, ...adminItems] : navItems;
+  const items = navItems;
 
   return (
     <nav className="flex flex-col gap-1 px-2">
