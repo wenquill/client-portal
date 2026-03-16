@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,21 +12,57 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Mail, Chrome } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Mail, Chrome, KeyRound, UserPlus } from "lucide-react";
 
 const magicLinkSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
 });
 
+const passwordSignInSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+const passwordSignUpSchema = z
+  .object({
+    fullName: z.string().min(2, "Please enter your full name"),
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(8, "Please confirm your password"),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: "Passwords must match",
+    path: ["confirmPassword"],
+  });
+
 type MagicLinkForm = z.infer<typeof magicLinkSchema>;
+type PasswordSignInForm = z.infer<typeof passwordSignInSchema>;
+type PasswordSignUpForm = z.infer<typeof passwordSignUpSchema>;
 
 export function LoginForm() {
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const router = useRouter();
+  const [magicLinkSentTo, setMagicLinkSentTo] = useState<string | null>(null);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const form = useForm<MagicLinkForm>({
+  const magicLinkForm = useForm<MagicLinkForm>({
     resolver: zodResolver(magicLinkSchema),
     defaultValues: { email: "" },
+  });
+
+  const signInForm = useForm<PasswordSignInForm>({
+    resolver: zodResolver(passwordSignInSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const signUpForm = useForm<PasswordSignUpForm>({
+    resolver: zodResolver(passwordSignUpSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   async function onMagicLink(values: MagicLinkForm) {
@@ -42,8 +79,66 @@ export function LoginForm() {
       return;
     }
 
-    setMagicLinkSent(true);
+    setMagicLinkSentTo(values.email);
     toast.success("Check your email for the login link!");
+  }
+
+  async function onPasswordSignIn(values: PasswordSignInForm) {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: values.email,
+      password: values.password,
+    });
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("Signed in successfully");
+    router.push("/dashboard");
+    router.refresh();
+  }
+
+  async function onPasswordSignUp(values: PasswordSignUpForm) {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: values.email,
+      password: values.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        data: {
+          full_name: values.fullName,
+          role: "client",
+        },
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    const looksLikeExistingUser =
+      !!data.user &&
+      Array.isArray(data.user.identities) &&
+      data.user.identities.length === 0;
+
+    if (looksLikeExistingUser) {
+      toast.info(
+        "This email already exists. If you registered with Google, use Google sign-in or magic link.",
+      );
+      return;
+    }
+
+    if (data.session) {
+      toast.success("Account created. You are now signed in.");
+      router.push("/dashboard");
+      router.refresh();
+      return;
+    }
+
+    toast.success("Account created. Check your email inbox/spam to confirm, then sign in.");
   }
 
   async function onGoogleSignIn() {
@@ -62,37 +157,13 @@ export function LoginForm() {
     }
   }
 
-  if (magicLinkSent) {
-    return (
-      <Card>
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <Mail className="h-6 w-6 text-green-600" />
-          </div>
-          <CardTitle>Check your email</CardTitle>
-          <CardDescription>
-            We sent a magic link to <strong>{form.getValues("email")}</strong>.
-            Click the link to sign in.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setMagicLinkSent(false)}
-          >
-            Use a different email
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>Choose your preferred sign-in method</CardDescription>
+        <CardTitle>Welcome</CardTitle>
+        <CardDescription>
+          Use Google, email/password, or a magic link.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button
@@ -102,7 +173,7 @@ export function LoginForm() {
           disabled={isGoogleLoading}
         >
           <Chrome className="mr-2 h-4 w-4" />
-          {isGoogleLoading ? "Redirecting…" : "Continue with Google"}
+          {isGoogleLoading ? "Redirecting..." : "Continue with Google"}
         </Button>
 
         <div className="flex items-center gap-3">
@@ -111,36 +182,166 @@ export function LoginForm() {
           <Separator className="flex-1" />
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onMagicLink)} className="space-y-3">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }: { field: React.InputHTMLAttributes<HTMLInputElement> & { name: string; value: string } }) => (
-                <FormItem>
-                  <FormLabel>Email address</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={form.formState.isSubmitting}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              {form.formState.isSubmitting ? "Sending…" : "Send magic link"}
-            </Button>
-          </form>
-        </Form>
+        <Tabs defaultValue="signin" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="signin">Sign in</TabsTrigger>
+            <TabsTrigger value="signup">Create account</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="signin" className="pt-3">
+            <Form {...signInForm}>
+              <form onSubmit={signInForm.handleSubmit(onPasswordSignIn)} className="space-y-3">
+                <FormField
+                  control={signInForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signInForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Enter your password" autoComplete="current-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={signInForm.formState.isSubmitting}
+                >
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  {signInForm.formState.isSubmitting ? "Signing in..." : "Sign in with password"}
+                </Button>
+              </form>
+            </Form>
+
+            <div className="my-3 flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground">or use magic link</span>
+              <Separator className="flex-1" />
+            </div>
+
+            <Form {...magicLinkForm}>
+              <form onSubmit={magicLinkForm.handleSubmit(onMagicLink)} className="space-y-3">
+                <FormField
+                  control={magicLinkForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email for magic link</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  className="w-full"
+                  disabled={magicLinkForm.formState.isSubmitting}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  {magicLinkForm.formState.isSubmitting ? "Sending..." : "Send magic link"}
+                </Button>
+              </form>
+            </Form>
+
+            {magicLinkSentTo && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Magic link sent to {magicLinkSentTo}. Check your inbox.
+              </p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="signup" className="pt-3">
+            <Form {...signUpForm}>
+              <form onSubmit={signUpForm.handleSubmit(onPasswordSignUp)} className="space-y-3">
+                <FormField
+                  control={signUpForm.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full name</FormLabel>
+                      <FormControl>
+                        <Input type="text" placeholder="Jane Doe" autoComplete="name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signUpForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signUpForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="At least 8 characters" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={signUpForm.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Repeat your password" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={signUpForm.formState.isSubmitting}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  {signUpForm.formState.isSubmitting ? "Creating account..." : "Create account"}
+                </Button>
+              </form>
+            </Form>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

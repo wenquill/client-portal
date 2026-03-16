@@ -10,7 +10,7 @@ export default function LoginPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight">Client Portal</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sign in to your account
+            Sign in or create an account
           </p>
         </div>
         <LoginForm />

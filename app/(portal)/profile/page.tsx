@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { getAuthUser } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SetPasswordForm } from "@/components/profile/set-password-form";
 
 export const metadata: Metadata = { title: "Profile" };
 
@@ -58,6 +59,18 @@ export default async function ProfilePage() {
             <span className="text-muted-foreground">Slug</span>
             <span className="font-mono text-xs">{organization.slug}</span>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Password login</CardTitle>
+          <CardDescription>
+            If you originally used Google or magic link, set a password here to also sign in with email and password.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SetPasswordForm />
         </CardContent>
       </Card>
     </div>
