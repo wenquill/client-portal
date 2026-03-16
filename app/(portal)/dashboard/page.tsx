@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import type { Route } from "next";
 import { getAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { TicketPriority, TicketStatus } from "@/types";
@@ -24,16 +26,30 @@ const PRIORITY_LABELS: Record<TicketPriority, string> = {
 };
 
 export default async function DashboardPage() {
-  const { organization } = await getAuthUser();
+  const authUser = await getAuthUser();
+  const { organization } = authUser;
   const supabase = await createClient();
 
-  const { data: tickets, error } = await supabase
-    .from("tickets")
-    .select("status, priority")
-    .eq("org_id", organization.id);
+  const [{ data: tickets, error }, { data: assignedTickets, error: assignedError }] = await Promise.all([
+    supabase
+      .from("tickets")
+      .select("status, priority")
+      .eq("org_id", organization.id),
+    supabase
+      .from("tickets")
+      .select("id, title, status, priority, updated_at")
+      .eq("org_id", organization.id)
+      .eq("assignee_id", authUser.id)
+      .order("updated_at", { ascending: false })
+      .limit(5),
+  ]);
 
   if (error) {
     console.error("[dashboard] failed to load tickets:", error.message);
+  }
+
+  if (assignedError) {
+    console.error("[dashboard] failed to load assigned tickets:", assignedError.message);
   }
 
   const statusCounts: Record<TicketStatus, number> = {
@@ -118,6 +134,49 @@ export default async function DashboardPage() {
             </Card>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Assigned To Me</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">
+              Recently updated tickets assigned to you
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {assignedError ? (
+              <p className="text-sm text-destructive">
+                Assigned tickets are temporarily unavailable.
+              </p>
+            ) : (assignedTickets ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">No tickets assigned to you yet.</p>
+            ) : (
+              <ul className="space-y-3">
+                {(assignedTickets ?? []).map((ticket) => (
+                  <li key={ticket.id} className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/tickets/${ticket.id}` as Route<string>}
+                        className="truncate font-medium hover:underline"
+                      >
+                        {ticket.title}
+                      </Link>
+                      <p className="text-xs text-muted-foreground">
+                        {STATUS_LABELS[ticket.status]} - {PRIORITY_LABELS[ticket.priority]}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(
+                        new Date(ticket.updated_at),
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </section>
     </div>
   );
