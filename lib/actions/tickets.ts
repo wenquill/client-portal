@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthUser } from "@/lib/auth";
-import { createTicketSchema, updateTicketSchema } from "@/lib/validations/ticket.schema";
+import {
+  createTicketSchema,
+  updateTicketSchema,
+  updateTicketStatusSchema,
+} from "@/lib/validations/ticket.schema";
 import { createCommentSchema } from "@/lib/validations/comment.schema";
 
 export type TicketActionState = {
@@ -194,5 +198,40 @@ export async function addTicketCommentAction(
   }
 
   revalidatePath(`/tickets/${ticketId}`);
+  return { success: true };
+}
+
+export async function updateTicketStatusAction(
+  ticketId: string,
+  _previousState: TicketActionState,
+  formData: FormData,
+): Promise<TicketActionState> {
+  const authUser = await getAuthUser();
+
+  const parsed = updateTicketStatusSchema.safeParse({
+    status: formData.get("status"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid status" };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("tickets")
+    .update({ status: parsed.data.status })
+    .eq("id", ticketId)
+    .eq("org_id", authUser.organization.id)
+    .select("id")
+    .single();
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/tickets");
+  revalidatePath(`/tickets/${ticketId}`);
+  revalidatePath(`/tickets/${ticketId}/edit`);
   return { success: true };
 }

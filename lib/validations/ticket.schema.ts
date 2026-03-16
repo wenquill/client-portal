@@ -13,5 +13,10 @@ export const updateTicketSchema = baseTicketSchema.extend({
   status: z.enum(["open", "in_progress", "resolved", "closed"]),
 });
 
+export const updateTicketStatusSchema = z.object({
+  status: z.enum(["open", "in_progress", "resolved", "closed"]),
+});
+
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type UpdateTicketInput = z.infer<typeof updateTicketSchema>;
+export type UpdateTicketStatusInput = z.infer<typeof updateTicketStatusSchema>;

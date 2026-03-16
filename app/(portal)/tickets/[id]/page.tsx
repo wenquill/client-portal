@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Route } from "next";
-import { addTicketCommentAction } from "@/lib/actions/tickets";
+import { addTicketCommentAction, updateTicketStatusAction } from "@/lib/actions/tickets";
 import { getAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { CommentForm } from "@/components/tickets/comment-form";
+import { StatusUpdateForm } from "@/components/tickets/status-update-form";
 
 export const metadata: Metadata = { title: "Ticket Details" };
 
@@ -196,6 +197,11 @@ export default async function TicketDetailPage({
           </div>
         </div>
       </div>
+
+      <StatusUpdateForm
+        initialStatus={ticket.status}
+        action={updateTicketStatusAction.bind(null, ticket.id)}
+      />
 
       <div className="rounded-xl border bg-card p-5">
         <h2 className="text-lg font-semibold">Description</h2>
