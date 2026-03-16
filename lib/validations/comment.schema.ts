@@ -1,0 +1,7 @@
+import { z } from "zod";
+
+export const createCommentSchema = z.object({
+  body: z.string().trim().min(1, "Comment cannot be empty").max(5000, "Comment is too long"),
+});
+
+export type CreateCommentInput = z.infer<typeof createCommentSchema>;

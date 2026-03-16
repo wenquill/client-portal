@@ -59,6 +59,7 @@ export default async function TicketsPage({
 }) {
   const authUser = await getAuthUser();
   const supabase = await createClient();
+  const canManageTickets = authUser.profile.role === "technician" || authUser.profile.role === "admin";
 
   const params = await searchParams;
 
@@ -87,7 +88,7 @@ export default async function TicketsPage({
   let query = supabase
     .from("tickets")
     .select(
-      "id,title,status,priority,created_at,assignee:users!tickets_assignee_id_fkey(full_name),created_by_user:users!tickets_created_by_fkey(full_name)",
+      "id,title,status,priority,created_at,assignee_id,assignee:users!tickets_assignee_id_fkey(full_name),created_by_user:users!tickets_created_by_fkey(full_name)",
       { count: "exact" },
     )
     .eq("org_id", authUser.organization.id);
@@ -142,8 +143,8 @@ export default async function TicketsPage({
           </p>
         </div>
 
-        {(authUser.profile.role === "technician" || authUser.profile.role === "admin") && (
-          <Button render={<Link href={"/tickets/new" as Route<string>} />}>
+        {canManageTickets && (
+          <Button nativeButton={false} render={<Link href={"/tickets/new" as Route<string>} />}>
             New ticket
           </Button>
         )}
@@ -198,6 +199,7 @@ export default async function TicketsPage({
         <div className="flex items-end gap-2">
           <Button type="submit" className="h-9">Apply</Button>
           <Button
+            nativeButton={false}
             type="button"
             variant="outline"
             className="h-9"
@@ -225,12 +227,13 @@ export default async function TicketsPage({
               <TableHead>
                 <Link href={getSortHref("created_at")} className="hover:underline">Created</Link>
               </TableHead>
+              {canManageTickets && <TableHead className="w-[120px]">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {(tickets ?? []).length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={canManageTickets ? 6 : 5} className="py-10 text-center text-muted-foreground">
                   No tickets found for these filters.
                 </TableCell>
               </TableRow>
@@ -239,20 +242,37 @@ export default async function TicketsPage({
                 const assignee = Array.isArray(ticket.assignee)
                   ? ticket.assignee[0]
                   : ticket.assignee;
+                const assigneeLabel = ticket.assignee_id
+                  ? (assignee?.full_name ?? "Assigned")
+                  : "Unassigned";
 
                 return (
                   <TableRow key={ticket.id}>
                     <TableCell className="max-w-[360px] truncate font-medium">
-                      {ticket.title}
+                      <Link href={`/tickets/${ticket.id}` as Route<string>} className="hover:underline">
+                        {ticket.title}
+                      </Link>
                     </TableCell>
                     <TableCell>{formatStatus(ticket.status)}</TableCell>
                     <TableCell className="capitalize">{ticket.priority}</TableCell>
-                    <TableCell>{assignee?.full_name ?? "Unassigned"}</TableCell>
+                    <TableCell>{assigneeLabel}</TableCell>
                     <TableCell>
                       {new Intl.DateTimeFormat("en-US", {
                         dateStyle: "medium",
                       }).format(new Date(ticket.created_at))}
                     </TableCell>
+                    {canManageTickets && (
+                      <TableCell>
+                        <Button
+                          nativeButton={false}
+                          variant="outline"
+                          size="sm"
+                          render={<Link href={`/tickets/${ticket.id}/edit` as Route<string>} />}
+                        >
+                          Edit
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })
@@ -267,6 +287,7 @@ export default async function TicketsPage({
         </p>
         <div className="flex items-center gap-2">
           <Button
+            nativeButton={false}
             variant="outline"
             disabled={!hasPrev}
             render={
@@ -285,6 +306,7 @@ export default async function TicketsPage({
             Previous
           </Button>
           <Button
+            nativeButton={false}
             variant="outline"
             disabled={!hasNext}
             render={
