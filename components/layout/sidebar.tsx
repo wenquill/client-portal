@@ -15,6 +15,7 @@ import type { UserRole } from "@/types";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tickets", label: "Tickets", icon: Ticket },
+  { href: "/organization", label: "Organization", icon: Building2 },
 ];
 
 const adminItems = [

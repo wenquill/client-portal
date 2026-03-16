@@ -190,7 +190,106 @@ export async function createOrganization(input: { name: string; logoUrl?: string
   });
 
   revalidatePath("/admin");
+  revalidatePath("/organization");
   revalidatePath("/dashboard");
   revalidatePath("/tickets");
   return { success: true, organizationId: created.id };
+}
+
+export type UpdateOrganizationState = {
+  error?: string;
+  success?: boolean;
+};
+
+export async function updateOrganizationAction(
+  orgId: string,
+  _previousState: UpdateOrganizationState,
+  formData: FormData,
+): Promise<UpdateOrganizationState> {
+  const supabase = await createClient();
+  const admin = createAdminClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Unauthorized" };
+  }
+
+  const { data: actor, error: actorError } = await admin
+    .from("users")
+    .select("id, org_id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (actorError || !actor || actor.role !== "admin") {
+    return { error: "Only admins can manage organizations" };
+  }
+
+  const allowedOrgIds = new Set<string>([actor.org_id]);
+  const { data: adminOrganizations } = await admin
+    .from("admin_organizations")
+    .select("org_id")
+    .eq("user_id", actor.id);
+
+  for (const item of adminOrganizations ?? []) {
+    allowedOrgIds.add(item.org_id);
+  }
+
+  if (!allowedOrgIds.has(orgId)) {
+    return { error: "You do not have access to that organization" };
+  }
+
+  const name = String(formData.get("name") ?? "").trim();
+  const slugInput = String(formData.get("slug") ?? "").trim();
+  const logoUrlInput = String(formData.get("logoUrl") ?? "").trim();
+
+  if (name.length < 2) {
+    return { error: "Organization name must be at least 2 characters" };
+  }
+
+  if (slugInput.length < 2) {
+    return { error: "Slug must be at least 2 characters" };
+  }
+
+  const slug = slugInput
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  if (!slug) {
+    return { error: "Slug must contain letters or numbers" };
+  }
+
+  const { data: existingSlug } = await admin
+    .from("organizations")
+    .select("id")
+    .eq("slug", slug)
+    .neq("id", orgId)
+    .maybeSingle();
+
+  if (existingSlug) {
+    return { error: "Slug is already in use" };
+  }
+
+  const { error } = await admin
+    .from("organizations")
+    .update({
+      name,
+      slug,
+      logo_url: logoUrlInput || null,
+    })
+    .eq("id", orgId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/organization");
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/tickets");
+  return { success: true };
 }
