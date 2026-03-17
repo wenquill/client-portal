@@ -101,6 +101,31 @@ function makeTicketsHref(params: Record<string, string | undefined>): Route<stri
   return (query ? `/tickets?${query}` : "/tickets") as Route<string>;
 }
 
+function buildVisiblePages(current: number, total: number): Array<number | "ellipsis"> {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, index) => index + 1);
+  }
+
+  const pages: Array<number | "ellipsis"> = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+
+  if (start > 2) {
+    pages.push("ellipsis");
+  }
+
+  for (let value = start; value <= end; value += 1) {
+    pages.push(value);
+  }
+
+  if (end < total - 1) {
+    pages.push("ellipsis");
+  }
+
+  pages.push(total);
+  return pages;
+}
+
 export default async function TicketsPage({
   searchParams,
 }: {
@@ -164,6 +189,7 @@ export default async function TicketsPage({
 
   const totalCount = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const visiblePages = buildVisiblePages(page, totalPages);
 
   const hasPrev = page > 1;
   const hasNext = page < totalPages;
@@ -374,6 +400,48 @@ export default async function TicketsPage({
           >
             Previous
           </Button>
+
+          {visiblePages.map((pageItem, index) => {
+            if (pageItem === "ellipsis") {
+              return (
+                <span
+                  key={`ellipsis-${index}`}
+                  className="px-1 text-sm text-muted-foreground"
+                  aria-hidden="true"
+                >
+                  ...
+                </span>
+              );
+            }
+
+            const isCurrentPage = pageItem === page;
+
+            return (
+              <Button
+                key={pageItem}
+                nativeButton={false}
+                variant={isCurrentPage ? "default" : "outline"}
+                size="sm"
+                disabled={isCurrentPage}
+                aria-current={isCurrentPage ? "page" : undefined}
+                render={
+                  <Link
+                    href={makeTicketsHref({
+                      q: q || undefined,
+                      status,
+                      priority,
+                      sort,
+                      order,
+                      page: String(pageItem),
+                    })}
+                  />
+                }
+              >
+                {pageItem}
+              </Button>
+            );
+          })}
+
           <Button
             nativeButton={false}
             variant="outline"

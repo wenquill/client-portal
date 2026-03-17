@@ -23,9 +23,9 @@ type NavItem = {
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tickets", label: "Tickets", icon: Ticket },
-  { href: "/profile", label: "Profile", icon: User },
-  { href: "/organization/signup-requests", label: "Signup Requests", icon: ClipboardCheck, roles: ["admin"] },
   { href: "/organization", label: "Organization", icon: Building2 },
+  { href: "/organization/signup-requests", label: "Signup Requests", icon: ClipboardCheck, roles: ["admin"] },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 function isItemActive(pathname: string, itemHref: NavItem["href"]): boolean {
