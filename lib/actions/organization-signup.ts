@@ -35,7 +35,7 @@ const organizationSignupSchema = z.object({
 });
 
 const reviewOrganizationSignupSchema = z.object({
-  status: z.enum(["reviewing", "approved", "rejected"]),
+  status: z.enum(["approved", "rejected"]),
   decisionNotes: z.string().max(5000, "Decision notes are too long").optional().or(z.literal("")),
 });
 

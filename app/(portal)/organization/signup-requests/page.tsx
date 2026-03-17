@@ -20,6 +20,7 @@ export default async function OrganizationSignupRequestsPage() {
   const { data: requests } = await admin
     .from("organization_signup_requests")
     .select("id, company_name, company_slug, contact_name, contact_email, website, notes, status, decision_notes, created_at, reviewed_at")
+    .eq("status", "pending")
     .order("created_at", { ascending: false });
 
   return (
@@ -27,14 +28,14 @@ export default async function OrganizationSignupRequestsPage() {
       <div>
         <h1 className="text-2xl font-bold">Organization Signup Requests</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Review and decide requests from new organizations.
+          Review and decide pending requests from new organizations.
         </p>
       </div>
 
       {(requests ?? []).length === 0 ? (
         <Card>
           <CardContent className="py-8 text-sm text-muted-foreground">
-            No signup requests yet.
+            No pending signup requests.
           </CardContent>
         </Card>
       ) : (

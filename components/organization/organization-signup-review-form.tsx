@@ -16,6 +16,9 @@ const initialState: OrganizationSignupState = {};
 
 export function OrganizationSignupReviewForm({ currentStatus, action }: OrganizationSignupReviewFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  const defaultDecision = currentStatus === "approved" || currentStatus === "rejected"
+    ? currentStatus
+    : "";
 
   useEffect(() => {
     if (state.error) {
@@ -36,10 +39,11 @@ export function OrganizationSignupReviewForm({ currentStatus, action }: Organiza
         <select
           id="review-status"
           name="status"
-          defaultValue={currentStatus === "pending" ? "reviewing" : currentStatus}
+          defaultValue={defaultDecision}
+          required
           className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
         >
-          <option value="reviewing">Reviewing</option>
+          <option value="" disabled>Select decision</option>
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
         </select>

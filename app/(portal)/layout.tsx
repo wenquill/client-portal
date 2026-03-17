@@ -24,6 +24,7 @@ export default async function PortalLayout({
       <Sidebar
         orgName={authUser.organization.name}
         orgLogoUrl={authUser.organization.logo_url}
+        role={authUser.profile.role}
         className="hidden md:flex"
       />
       <div className="flex min-w-0 flex-1 flex-col md:overflow-hidden">
@@ -58,7 +59,7 @@ export default async function PortalLayout({
                   </SheetTitle>
                 </SheetHeader>
                 <div className="py-4">
-                  <SidebarNav />
+                  <SidebarNav role={authUser.profile.role} />
                 </div>
               </SheetContent>
             </Sheet>

@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import type { Route } from "next";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAuthUser } from "@/lib/auth";
@@ -134,19 +132,6 @@ export default async function OrganizationPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Review signup requests</CardTitle>
-              <CardDescription>
-                Review and decide requests from new organizations.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href={"/organization/signup-requests" as Route<string>} className="text-sm font-medium text-primary hover:underline">
-                Open review queue
-              </Link>
-            </CardContent>
-          </Card>
         </>
       ) : null }
     </div>
