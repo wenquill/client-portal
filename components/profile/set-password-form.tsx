@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,8 +42,6 @@ export function SetPasswordForm({ hasPassword }: SetPasswordFormProps) {
   const [mode, setMode] = useState<"create" | "change">(
     hasPassword ? "change" : "create",
   );
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const createForm = useForm<CreatePasswordFormValues>({
     resolver: zodResolver(createPasswordSchema),
@@ -62,13 +60,6 @@ export function SetPasswordForm({ hasPassword }: SetPasswordFormProps) {
     },
   });
 
-  useEffect(() => {
-    const supabase = createClient();
-    void supabase.auth.getUser().then(({ data }) => {
-      setUserEmail(data.user?.email ?? null);
-    });
-  }, []);
-
   async function onCreatePassword(values: CreatePasswordFormValues) {
     const supabase = createClient();
     const { error } = await supabase.auth.updateUser({
@@ -81,11 +72,11 @@ export function SetPasswordForm({ hasPassword }: SetPasswordFormProps) {
     }
 
     const {
-      data: { user },
+      data: { user: refreshedUser },
     } = await supabase.auth.getUser();
 
-    if (user?.id) {
-      await supabase.from("users").update({ has_password: true }).eq("id", user.id);
+    if (refreshedUser?.id) {
+      await supabase.from("users").update({ has_password: true }).eq("id", refreshedUser.id);
     }
 
     createForm.reset();
@@ -96,13 +87,18 @@ export function SetPasswordForm({ hasPassword }: SetPasswordFormProps) {
   async function onChangePassword(values: ChangePasswordFormValues) {
     const supabase = createClient();
 
-    if (!userEmail) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user?.email) {
       toast.error("Could not verify your account email. Please sign in again.");
       return;
     }
 
     const { error: verifyError } = await supabase.auth.signInWithPassword({
-      email: userEmail,
+      email: user.email,
       password: values.currentPassword,
     });
 
@@ -121,44 +117,15 @@ export function SetPasswordForm({ hasPassword }: SetPasswordFormProps) {
     }
 
     const {
-      data: { user },
+      data: { user: refreshedUser },
     } = await supabase.auth.getUser();
 
-    if (user?.id) {
-      await supabase.from("users").update({ has_password: true }).eq("id", user.id);
+    if (refreshedUser?.id) {
+      await supabase.from("users").update({ has_password: true }).eq("id", refreshedUser.id);
     }
 
     changeForm.reset();
     toast.success("Password updated successfully.");
-  }
-
-  async function sendPasswordReset() {
-    setIsSendingReset(true);
-
-    const supabase = createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user?.email) {
-      toast.error("Could not get your email. Please sign in again.");
-      setIsSendingReset(false);
-      return;
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
-    });
-
-    if (error) {
-      toast.error(error.message);
-      setIsSendingReset(false);
-      return;
-    }
-
-    toast.success("Password reset link sent to your email.");
-    setIsSendingReset(false);
   }
 
   if (mode === "change") {
@@ -227,19 +194,9 @@ export function SetPasswordForm({ hasPassword }: SetPasswordFormProps) {
               )}
             />
 
-            <div className="flex flex-wrap gap-2">
-              <Button type="submit" disabled={changeForm.formState.isSubmitting}>
-                {changeForm.formState.isSubmitting ? "Updating..." : "Update password"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={sendPasswordReset}
-                disabled={isSendingReset}
-              >
-                {isSendingReset ? "Sending reset link..." : "Reset by email instead"}
-              </Button>
-            </div>
+            <Button type="submit" disabled={changeForm.formState.isSubmitting}>
+              {changeForm.formState.isSubmitting ? "Updating..." : "Update password"}
+            </Button>
           </form>
         </Form>
 
