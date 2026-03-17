@@ -5,6 +5,21 @@ import { getAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { TicketPriority, TicketStatus } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge, PriorityBadge } from "@/components/tickets/ticket-badges";
+
+const STATUS_ACCENT: Record<TicketStatus, string> = {
+  open: "border-l-4 border-l-blue-500",
+  in_progress: "border-l-4 border-l-amber-500",
+  resolved: "border-l-4 border-l-green-500",
+  closed: "border-l-4 border-l-slate-400",
+};
+
+const PRIORITY_ACCENT: Record<TicketPriority, string> = {
+  low: "border-l-4 border-l-slate-400",
+  medium: "border-l-4 border-l-blue-500",
+  high: "border-l-4 border-l-orange-500",
+  urgent: "border-l-4 border-l-red-500",
+};
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -100,7 +115,7 @@ export default async function DashboardPage() {
         <h2 className="text-lg font-semibold">By Status</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {STATUS_ORDER.map((status) => (
-            <Card key={status}>
+            <Card key={status} className={STATUS_ACCENT[status]}>
               <CardHeader>
                 <CardTitle className="text-sm text-muted-foreground">
                   {STATUS_LABELS[status]}
@@ -120,7 +135,7 @@ export default async function DashboardPage() {
         <h2 className="text-lg font-semibold">By Priority</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {PRIORITY_ORDER.map((priority) => (
-            <Card key={priority}>
+            <Card key={priority} className={PRIORITY_ACCENT[priority]}>
               <CardHeader>
                 <CardTitle className="text-sm text-muted-foreground">
                   {PRIORITY_LABELS[priority]}
@@ -155,16 +170,17 @@ export default async function DashboardPage() {
               <ul className="space-y-3">
                 {(assignedTickets ?? []).map((ticket) => (
                   <li key={ticket.id} className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                    <div className="min-w-0 space-y-1">
                       <Link
                         href={`/tickets/${ticket.id}` as Route<string>}
                         className="truncate font-medium hover:underline"
                       >
                         {ticket.title}
                       </Link>
-                      <p className="text-xs text-muted-foreground">
-                        {STATUS_LABELS[ticket.status]} - {PRIORITY_LABELS[ticket.priority]}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <StatusBadge status={ticket.status} />
+                        <PriorityBadge priority={ticket.priority} />
+                      </div>
                     </div>
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(

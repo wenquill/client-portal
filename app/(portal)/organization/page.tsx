@@ -148,16 +148,7 @@ export default async function OrganizationPage() {
             </CardContent>
           </Card>
         </>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Read-only access</CardTitle>
-            <CardDescription>
-              Only admins can edit organization settings. Contact your admin for updates.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+      ) : null }
     </div>
   );
 }

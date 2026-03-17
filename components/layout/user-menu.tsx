@@ -19,6 +19,7 @@ interface UserMenuProps {
   fullName: string | null;
   email: string | undefined;
   avatarUrl: string | null;
+  compact?: boolean;
 }
 
 function getInitials(name: string | null, email: string | undefined): string {
@@ -33,7 +34,7 @@ function getInitials(name: string | null, email: string | undefined): string {
   return email?.[0]?.toUpperCase() ?? "?";
 }
 
-export function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
+export function UserMenu({ fullName, email, avatarUrl, compact = false }: UserMenuProps) {
   const router = useRouter();
   return (
     <DropdownMenu>
@@ -53,7 +54,7 @@ export function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
           <span className="text-sm font-medium leading-none">
             {fullName ?? email}
           </span>
-          {fullName && (
+          {fullName && !compact && (
             <span className="mt-0.5 text-xs text-muted-foreground">{email}</span>
           )}
         </div>

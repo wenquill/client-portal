@@ -7,27 +7,24 @@ import {
   LayoutDashboard,
   Ticket,
   Building2,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { UserRole } from "@/types";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tickets", label: "Tickets", icon: Ticket },
+  { href: "/profile", label: "Profile", icon: User },
   { href: "/organization", label: "Organization", icon: Building2 },
 ];
 
-interface SidebarNavProps {
-  role: UserRole;
-}
-
-export function SidebarNav({ role }: SidebarNavProps) {
+export function SidebarNav() {
   const pathname = usePathname();
 
   const items = navItems;
 
   return (
-    <nav className="flex flex-col gap-1 px-2">
+    <nav className="flex flex-col gap-0.5 px-2">
       {items.map((item) => {
         const Icon = item.icon;
         const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -38,8 +35,8 @@ export function SidebarNav({ role }: SidebarNavProps) {
             className={cn(
               "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
@@ -54,24 +51,26 @@ export function SidebarNav({ role }: SidebarNavProps) {
 interface SidebarProps {
   orgName: string;
   orgLogoUrl: string | null;
-  role: UserRole;
+  className?: string;
 }
 
-export function Sidebar({ orgName, orgLogoUrl, role }: SidebarProps) {
+export function Sidebar({ orgName, orgLogoUrl, className }: SidebarProps) {
   return (
-    <aside className="flex h-full w-60 flex-col border-r bg-background">
-      <div className="flex h-14 items-center gap-2 border-b px-4">
+    <aside className={cn("flex h-full w-60 flex-col bg-sidebar", className)} style={{ borderRight: "1px solid var(--sidebar-border)" }}>
+      <div className="flex h-14 items-center gap-2 px-4" style={{ borderBottom: '1px solid var(--sidebar-border)' }}>
         {orgLogoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={orgLogoUrl} alt={orgName} className="h-6 w-6 rounded" />
         ) : (
-          <Building2 className="h-5 w-5 text-muted-foreground" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-sidebar-primary">
+            <Building2 className="h-4 w-4 text-sidebar-primary-foreground" />
+          </div>
         )}
-        <span className="truncate text-sm font-semibold">{orgName}</span>
+        <span className="truncate text-sm font-semibold text-sidebar-foreground">{orgName}</span>
       </div>
 
       <div className="flex-1 overflow-y-auto py-4">
-        <SidebarNav role={role} />
+        <SidebarNav />
       </div>
     </aside>
   );

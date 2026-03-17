@@ -4,6 +4,7 @@ import type { Route } from "next";
 import { getAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { TicketPriority, TicketStatus } from "@/types";
+import { StatusBadge, PriorityBadge } from "@/components/tickets/ticket-badges";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -183,7 +184,7 @@ export default async function TicketsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Tickets</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -259,7 +260,7 @@ export default async function TicketsPage({
       </form>
 
       <div className="rounded-xl border bg-card p-2">
-        <Table>
+        <Table className="min-w-[760px]">
           <TableHeader>
             <TableRow>
               <TableHead>
@@ -301,8 +302,8 @@ export default async function TicketsPage({
                         {ticket.title}
                       </Link>
                     </TableCell>
-                    <TableCell>{formatStatus(ticket.status)}</TableCell>
-                    <TableCell className="capitalize">{ticket.priority}</TableCell>
+                    <TableCell><StatusBadge status={ticket.status} /></TableCell>
+                    <TableCell><PriorityBadge priority={ticket.priority} /></TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {assigneeAvatar ? (
@@ -349,11 +350,11 @@ export default async function TicketsPage({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           Page {page} of {totalPages}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <Button
             nativeButton={false}
             variant="outline"

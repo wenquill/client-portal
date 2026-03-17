@@ -10,25 +10,26 @@ import type { Organization } from "@/types";
 interface OrgSwitcherProps {
   currentOrgId: string;
   organizations: Organization[];
+  compact?: boolean;
 }
 
-export function OrgSwitcher({ currentOrgId, organizations }: OrgSwitcherProps) {
+export function OrgSwitcher({ currentOrgId, organizations, compact = false }: OrgSwitcherProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const currentOrganizationName = organizations.find((item) => item.id === currentOrgId)?.name;
 
   if (organizations.length <= 1) {
     return (
-      <div>
-        <p className="text-xs text-muted-foreground">Organization</p>
-        <p className="text-sm font-medium">{organizations[0]?.name ?? "Unknown"}</p>
+      <div className="min-w-0">
+        {!compact && <p className="text-xs text-muted-foreground">Organization</p>}
+        <p className="truncate text-sm font-medium">{organizations[0]?.name ?? "Unknown"}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-w-56">
-      <p className="mb-1 text-xs text-muted-foreground">Organization</p>
+    <div className="w-full min-w-0 sm:min-w-56">
+      {!compact && <p className="mb-1 text-xs text-muted-foreground">Organization</p>}
       <Select
         value={currentOrgId}
         onValueChange={(value) => {

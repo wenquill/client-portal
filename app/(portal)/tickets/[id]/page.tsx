@@ -6,20 +6,12 @@ import { addTicketCommentAction, updateTicketStatusAction } from "@/lib/actions/
 import { getAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { CommentsThread } from "@/components/tickets/comments-thread";
 import { CommentForm } from "@/components/tickets/comment-form";
 import { StatusUpdateForm } from "@/components/tickets/status-update-form";
+import { StatusBadge, PriorityBadge } from "@/components/tickets/ticket-badges";
 
 export const metadata: Metadata = { title: "Ticket Details" };
-
-function formatStatus(status: string) {
-  return status === "in_progress"
-    ? "In Progress"
-    : status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-function formatPriority(priority: string) {
-  return priority.charAt(0).toUpperCase() + priority.slice(1);
-}
 
 function formatAssigneeLabel(
   assigneeId: string | null,
@@ -77,6 +69,23 @@ function getInitials(name: string): string {
   return parts.map((item) => item[0]?.toUpperCase() ?? "").join("");
 }
 
+type CommentWithAuthor = {
+  id: string;
+  body: string;
+  created_at: string;
+  author: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  } | {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  }[] | null;
+};
+
 export default async function TicketDetailPage({
   params,
 }: {
@@ -111,6 +120,8 @@ export default async function TicketDetailPage({
     throw new Error(`Failed to load comments: ${commentsError.message}`);
   }
 
+  const initialComments = (comments ?? []) as CommentWithAuthor[];
+
   const assignee = Array.isArray(ticket.assignee) ? ticket.assignee[0] : ticket.assignee;
   const creator = Array.isArray(ticket.created_by_user) ? ticket.created_by_user[0] : ticket.created_by_user;
   const assigneeLabel = formatAssigneeLabel(ticket.assignee_id, assignee?.full_name);
@@ -122,7 +133,7 @@ export default async function TicketDetailPage({
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm text-muted-foreground">Ticket</p>
           <h1 className="text-2xl font-bold">{ticket.title}</h1>
@@ -131,12 +142,21 @@ export default async function TicketDetailPage({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button nativeButton={false} variant="outline" render={<Link href={"/tickets" as Route<string>} />}>
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+          <Button
+            nativeButton={false}
+            variant="outline"
+            className="w-full sm:w-auto"
+            render={<Link href={"/tickets" as Route<string>} />}
+          >
             Back to tickets
           </Button>
           {canManageTickets && (
-            <Button nativeButton={false} render={<Link href={`/tickets/${ticket.id}/edit` as Route<string>} />}>
+            <Button
+              nativeButton={false}
+              className="w-full sm:w-auto"
+              render={<Link href={`/tickets/${ticket.id}/edit` as Route<string>} />}
+            >
               Edit ticket
             </Button>
           )}
@@ -146,11 +166,11 @@ export default async function TicketDetailPage({
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-xl border bg-card p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
-          <p className="mt-2 font-medium">{formatStatus(ticket.status)}</p>
+          <div className="mt-2"><StatusBadge status={ticket.status} /></div>
         </div>
         <div className="rounded-xl border bg-card p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Priority</p>
-          <p className="mt-2 font-medium">{formatPriority(ticket.priority)}</p>
+          <div className="mt-2"><PriorityBadge priority={ticket.priority} /></div>
         </div>
         <div className="rounded-xl border bg-card p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Assignee</p>
@@ -228,49 +248,7 @@ export default async function TicketDetailPage({
 
         <CommentForm action={addTicketCommentAction.bind(null, ticket.id)} />
 
-        <div className="space-y-3">
-          {(comments ?? []).length === 0 ? (
-            <div className="rounded-xl border border-dashed bg-card p-6 text-sm text-muted-foreground">
-              No comments yet.
-            </div>
-          ) : (
-            (comments ?? []).map((comment) => {
-              const author = Array.isArray(comment.author) ? comment.author[0] : comment.author;
-              const authorName = author?.full_name ?? "Unknown user";
-              const authorEmail = formatIdentityEmail(author?.email);
-
-              return (
-                <div key={comment.id} className="rounded-xl border bg-card p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      {author?.avatar_url ? (
-                        <img
-                          src={author.avatar_url}
-                          alt={authorName}
-                          className="h-7 w-7 rounded-full border object-cover"
-                        />
-                      ) : (
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
-                          {getInitials(authorName)}
-                        </span>
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{authorName}</p>
-                        {authorEmail && (
-                          <p className="truncate text-xs text-muted-foreground">{authorEmail}</p>
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(comment.created_at))}
-                    </p>
-                  </div>
-                  <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{comment.body}</p>
-                </div>
-              );
-            })
-          )}
-        </div>
+        <CommentsThread ticketId={ticket.id} initialComments={initialComments} />
       </div>
     </div>
   );
