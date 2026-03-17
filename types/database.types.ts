@@ -110,6 +110,69 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_signup_requests: {
+        Row: {
+          company_name: string
+          company_slug: string | null
+          contact_email: string
+          contact_name: string
+          created_at: string
+          decision_notes: string | null
+          id: string
+          notes: string | null
+          organization_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          website: string | null
+        }
+        Insert: {
+          company_name: string
+          company_slug?: string | null
+          contact_email: string
+          contact_name: string
+          created_at?: string
+          decision_notes?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          website?: string | null
+        }
+        Update: {
+          company_name?: string
+          company_slug?: string | null
+          contact_email?: string
+          contact_name?: string
+          created_at?: string
+          decision_notes?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_signup_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_signup_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           assignee_id: string | null

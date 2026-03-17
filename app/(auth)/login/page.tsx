@@ -1,6 +1,5 @@
 import { Metadata } from "next";
-import { Badge } from "@/components/ui/badge";
-import { LoginForm } from "@/components/auth/login-form";
+import { AuthAccessHub } from "@/components/auth/auth-access-hub";
 
 export const metadata: Metadata = { title: "Sign In" };
 
@@ -19,23 +18,5 @@ export default async function LoginPage({
   const params = await searchParams;
   const error = params.error ? errorMessages[params.error] : null;
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Client Portal</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Sign in or create an account
-          </p>
-        </div>
-        {error && (
-          <div className="space-y-2 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm">
-            <Badge variant="destructive">Access issue</Badge>
-            <p className="text-destructive">{error}</p>
-          </div>
-        )}
-        <LoginForm />
-      </div>
-    </main>
-  );
+  return <AuthAccessHub activeSection="portal" error={error} />;
 }
