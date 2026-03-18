@@ -1,36 +1,152 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Client Portal
 
-## Getting Started
+A modern, multi-tenant support ticket management portal built with Next.js, React, and Supabase. Designed for managing organization requests, support tickets, and team collaboration with a focus on user experience and accessibility.
 
-First, run the development server:
+## Overview
 
+The Client Portal is a comprehensive solution for organizations to:
+- Submit and track organization access requests
+- Manage support tickets across multiple organizations
+- Collaborate with team members
+- Control access and permissions through role-based access
+
+## Key Features
+
+### 🎫 Ticket Management
+- **Create & Track Tickets** - Submit support tickets with priority levels (low, medium, high, urgent)
+- **Ticket Status Tracking** - Monitor ticket lifecycle (open, in_progress, resolved, closed)
+- **Search & Filter** - Find tickets by title, description, status, or priority
+- **Pagination** - Browse tickets with smart numbered pagination
+- **Assignee Management** - Assign tickets to team members with avatars and email display
+
+### 📋 Organization Access Control
+- **Signup Requests** - Allow organizations to request access with company details
+- **Request Review** - Admin approval workflow with decision notes
+- **Auto-Invite on Approval** - Automatically send magic link invites to approved requesters
+- **Request Status Lookup** - Organizations can track their request status with their email
+
+### 👥 User Management
+- **Multi-Tenant Support** - Isolated data per organization
+- **Role-Based Access** - Three roles: Admin, Technician, Client
+- **Organization Switching** - Switch between organizations you have access to
+- **User Profiles** - Manage profile information and password
+
+### 🎨 User Experience
+- **Dark/Light Mode Toggle** - Customize theme preferences (system, light, dark)
+- **Keyboard Shortcuts** - Power user shortcuts for efficient navigation:
+  - **j** - Navigate down through tickets
+  - **k** - Navigate up through tickets
+  - **c** - Create new ticket
+  - **?** - Show keyboard shortcuts dialog
+- **Loading Skeletons** - Smooth loading states with skeleton screens
+- **Toast Notifications** - User-friendly feedback for all actions
+- **Responsive Design** - Works seamlessly on desktop and mobile
+
+### 🔐 Authentication & Security
+- **Supabase Auth** - Magic link authentication (no password required initially)
+- **Session Management** - Automatic session handling across tabs
+- **Row-Level Security** - Database-level access control
+- **Role-Based Row Filters** - Users only see data they have access to
+
+## Tech Stack
+
+- **Framework**: Next.js 16.1.6 with React 19 (App Router)
+- **Database**: Supabase PostgreSQL with migrations
+- **Authentication**: Supabase Auth (Magic Links)
+- **UI Components**: Shadcn/UI + Tailwind CSS 4 + CVA
+- **Forms**: React Hook Form + Zod validation
+- **Query Management**: TanStack React Query
+- **Typography**: Montserrat (Google Fonts)
+- **Icons**: Lucide React
+
+## Prerequisites
+
+Before you begin, ensure you have:
+- Node.js 18+ and npm/yarn
+- A Supabase account and project
+- Git
+
+## Local Setup & Installation
+
+### 1. Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Set Up Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file in the root directory:
+```bash
+# Supabase (get these from your Supabase project settings)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# App URL (local development)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-## Learn More
+### 3. Set Up Supabase Locally (Optional)
 
-To learn more about Next.js, take a look at the following resources:
+If you want to run Supabase locally:
+```bash
+# Install Supabase CLI
+npm install -g supabase
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Start Supabase locally
+supabase start
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Run migrations
+supabase db push
+```
 
-## Deploy on Vercel
+Or use your remote Supabase project directly.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. Run Development Server
+```bash
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+### 5. Build for Production
+```bash
+npm run build
+npm start
+```
+
+## How to Use the App
+
+### For Clients
+1. **Sign In** - Use the "Portal sign in" tab with your email (magic link sent)
+2. **View Dashboard** - See your organization overview and ticket counts
+3. **Create Ticket** - Click "New ticket" or press `c` to report an issue
+4. **Track Tickets** - View all your tickets with filtering and search
+5. **View Profile** - Manage your profile and set a password
+
+### For Technicians
+All client features plus:
+1. **Edit Tickets** - Update status, priority, and assignments
+2. **Comments** - Add comments to tickets for team communication
+3. **Ticket Assignment** - Assign tickets to yourself or team members
+
+### For Admins
+All technician features plus:
+1. **Admin Panel** - Access admin controls for organization management
+2. **Review Requests** - Approve/reject organization access requests
+3. **Invite Users** - Send invites to users for organizations
+4. **View Access Logs** - See who has access to organizations
+
+### Keyboard Shortcuts (on Tickets Page)
+- **j** - Move down in ticket list
+- **k** - Move up in ticket list
+- **c** - Create new ticket
+- **?** - Display keyboard shortcuts
+
+## Database Migrations
+
+Migrations are located in `supabase/migrations/`. 
+To apply migrations:
+```bash
+supabase db push
+```
