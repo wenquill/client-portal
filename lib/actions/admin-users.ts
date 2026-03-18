@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { provisionExistingAuthUser } from "@/lib/auth/provision-existing-user";
 
 const inviteUserSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -54,6 +55,26 @@ export async function inviteOrganizationUser(input: z.infer<typeof inviteUserSch
 
   const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/auth/finish?next=/dashboard`;
 
+  const existingUserResult = await provisionExistingAuthUser({
+    admin,
+    email: parsed.data.email,
+    fullName: parsed.data.fullName,
+    role: parsed.data.role,
+    orgId: parsed.data.orgId,
+  });
+
+  if (existingUserResult.found) {
+    if (existingUserResult.error) {
+      return { error: existingUserResult.error };
+    }
+
+    return {
+      success: true,
+      email: existingUserResult.email,
+      reusedExistingAccount: true,
+    };
+  }
+
   const { data, error } = await admin.auth.admin.inviteUserByEmail(parsed.data.email, {
     redirectTo,
     data: {
@@ -70,5 +91,6 @@ export async function inviteOrganizationUser(input: z.infer<typeof inviteUserSch
   return {
     success: true,
     email: data.user?.email ?? parsed.data.email,
+    reusedExistingAccount: false,
   };
 }

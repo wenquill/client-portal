@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAuthUser } from "@/lib/auth";
+import { provisionExistingAuthUser } from "@/lib/auth/provision-existing-user";
 
 export type OrganizationSignupState = {
   error?: string;
@@ -156,23 +157,40 @@ export async function reviewOrganizationSignupAction(
     const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/auth/finish?next=/dashboard`;
     const inviteEmail = request.contact_email.trim().toLowerCase();
 
-    const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
-      redirectTo,
-      data: {
-        full_name: request.contact_name.trim(),
-        role: "technician",
-        org_id: organizationId,
-      },
+    const existingUserResult = await provisionExistingAuthUser({
+      admin,
+      email: inviteEmail,
+      fullName: request.contact_name.trim(),
+      role: "technician",
+      orgId: organizationId,
     });
 
-    if (inviteError) {
-      if (inviteError.message.toLowerCase().includes("already")) {
+    if (existingUserResult.found) {
+      if (existingUserResult.error) {
         return {
-          error: "The requester already has an account. Please invite a different email or handle this user manually.",
+          error: `Failed to provision existing account: ${existingUserResult.error}`,
         };
       }
+    } else {
 
-      return { error: `Failed to send invite link: ${inviteError.message}` };
+      const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
+        redirectTo,
+        data: {
+          full_name: request.contact_name.trim(),
+          role: "technician",
+          org_id: organizationId,
+        },
+      });
+
+      if (inviteError) {
+        if (inviteError.message.toLowerCase().includes("already")) {
+          return {
+            error: "The requester already has an account, but it could not be provisioned automatically. Please retry or handle this user manually.",
+          };
+        }
+
+        return { error: `Failed to send invite link: ${inviteError.message}` };
+      }
     }
   }
 

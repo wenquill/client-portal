@@ -60,7 +60,11 @@ export function InviteUserForm({ currentOrgId, currentOrgName }: InviteUserFormP
         fullName: "",
         email: "",
       });
-      toast.success(`Invitation sent to ${result.email}`);
+      toast.success(
+        result.reusedExistingAccount
+          ? `Access granted to existing account ${result.email}. Ask them to sign in again.`
+          : `Invitation sent to ${result.email}`,
+      );
     });
   }
 
