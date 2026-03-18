@@ -12,26 +12,26 @@ The Client Portal is a comprehensive solution for organizations to:
 
 ## Key Features
 
-### 🎫 Ticket Management
+### Ticket Management
 - **Create & Track Tickets** - Submit support tickets with priority levels (low, medium, high, urgent)
 - **Ticket Status Tracking** - Monitor ticket lifecycle (open, in_progress, resolved, closed)
 - **Search & Filter** - Find tickets by title, description, status, or priority
 - **Pagination** - Browse tickets with smart numbered pagination
 - **Assignee Management** - Assign tickets to team members with avatars and email display
 
-### 📋 Organization Access Control
+### Organization Access Control
 - **Signup Requests** - Allow organizations to request access with company details
 - **Request Review** - Admin approval workflow with decision notes
 - **Auto-Invite on Approval** - Automatically send magic link invites to approved requesters
 - **Request Status Lookup** - Organizations can track their request status with their email
 
-### 👥 User Management
+### User Management
 - **Multi-Tenant Support** - Isolated data per organization
 - **Role-Based Access** - Three roles: Admin, Technician, Client
 - **Organization Switching** - Switch between organizations you have access to
 - **User Profiles** - Manage profile information and password
 
-### 🎨 User Experience
+### User Experience
 - **Dark/Light Mode Toggle** - Customize theme preferences (system, light, dark)
 - **Keyboard Shortcuts** - Power user shortcuts for efficient navigation:
   - **j** - Navigate down through tickets
@@ -42,7 +42,7 @@ The Client Portal is a comprehensive solution for organizations to:
 - **Toast Notifications** - User-friendly feedback for all actions
 - **Responsive Design** - Works seamlessly on desktop and mobile
 
-### 🔐 Authentication & Security
+### Authentication & Security
 - **Supabase Auth** - Magic link authentication (no password required initially)
 - **Session Management** - Automatic session handling across tabs
 - **Row-Level Security** - Database-level access control
@@ -136,12 +136,6 @@ All technician features plus:
 2. **Review Requests** - Approve/reject organization access requests
 3. **Invite Users** - Send invites to users for organizations
 4. **View Access Logs** - See who has access to organizations
-
-### Keyboard Shortcuts (on Tickets Page)
-- **j** - Move down in ticket list
-- **k** - Move up in ticket list
-- **c** - Create new ticket
-- **?** - Display keyboard shortcuts
 
 ## Database Migrations
 
