@@ -2,18 +2,20 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import type { EmailOtpType } from "@supabase/supabase-js";
+import type { EmailOtpType, User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 async function finalizeAuthorizedSession(
   supabase: ReturnType<typeof createServerClient>,
   origin: string,
   next: string,
+  oauthUser?: User | null,
 ) {
   const admin = createAdminClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: authData } = oauthUser
+    ? { data: { user: oauthUser } }
+    : await supabase.auth.getUser();
+  const user = authData.user;
 
   if (!user) {
     return NextResponse.redirect(`${origin}/login?error=auth_failed`);
@@ -29,8 +31,14 @@ async function finalizeAuthorizedSession(
   const isInvited = typeof invitedOrgId === "string" || Boolean(existingProfile);
 
   if (!isInvited) {
+    await admin.from("users").delete().eq("id", user.id);
+    const { error: deleteAuthError } = await admin.auth.admin.deleteUser(user.id, false);
     await supabase.auth.signOut();
-    await admin.auth.admin.deleteUser(user.id);
+
+    if (deleteAuthError) {
+      console.error("[auth/callback] failed to delete unauthorized oauth user:", deleteAuthError);
+    }
+
     return NextResponse.redirect(`${origin}/login?error=invite_required`);
   }
 
@@ -65,16 +73,16 @@ export async function GET(request: NextRequest) {
   );
 
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return finalizeAuthorizedSession(supabase, origin, next);
+      return finalizeAuthorizedSession(supabase, origin, next, data.user);
     }
   }
 
   if (tokenHash && type) {
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+    const { data, error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     if (!error) {
-      return finalizeAuthorizedSession(supabase, origin, next);
+      return finalizeAuthorizedSession(supabase, origin, next, data.user);
     }
   }
 
