@@ -122,10 +122,6 @@ export async function getAuthUser(): Promise<AuthUser> {
   };
 }
 
-/**
- * Returns the current session user without redirecting.
- * Use this where auth is optional.
- */
 export async function getOptionalUser() {
   const supabase = await createClient();
   const {

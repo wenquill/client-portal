@@ -67,13 +67,10 @@ export function OrganizationSignupForm() {
           />
         </div>
 
-        <div className="md:col-span-2 flex items-center gap-3">
-          <Button type="submit" disabled={pending}>
+        <div className="md:col-span-2">
+          <Button type="submit" disabled={pending} className="w-full">
             {pending ? "Submitting..." : "Request organization account"}
           </Button>
-          <p className="text-sm text-muted-foreground">
-            We will review your request and contact you by email.
-          </p>
         </div>
       </form>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,12 +18,12 @@ interface AuthAccessHubProps {
   error?: string | null;
 }
 
-const sectionRoutes: Record<AuthSection, string> = {
+const sectionRoutes: Record<AuthSection, Route<string>> = {
   portal: "/login",
   organization: "/register-organization",
 };
 
-const organizationRoutes: Record<OrganizationSection, string> = {
+const organizationRoutes: Record<OrganizationSection, Route<string>> = {
   request: "/register-organization",
   status: "/register-organization/status",
 };
@@ -59,17 +60,6 @@ export function AuthAccessHub({ activeSection, activeOrganizationSection = "requ
             </TabsList>
 
             <TabsContent value="portal" className="pt-5">
-              <p className="mb-5 text-sm text-muted-foreground">
-                For team members and invited users whose organization is already in the portal. Sign in with Google, a magic link, or password.
-                {" "}New to the portal?{" "}
-                <button
-                  type="button"
-                  onClick={() => router.push("/register-organization")}
-                  className="font-medium text-primary hover:underline"
-                >
-                  Submit an organization request instead.
-                </button>
-              </p>
               <LoginForm />
             </TabsContent>
 

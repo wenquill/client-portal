@@ -121,10 +121,9 @@ export async function reviewOrganizationSignupAction(
   const admin = createAdminClient();
   const decisionNotes = parsed.data.decisionNotes?.trim() ?? "";
 
-  // Fetch the signup request so we have company data for org creation
   const { data: request, error: fetchError } = await admin
     .from("organization_signup_requests")
-    .select("id, company_name, company_slug, organization_id")
+    .select("id, company_name, company_slug, contact_name, contact_email, organization_id")
     .eq("id", requestId)
     .single();
 
@@ -134,7 +133,6 @@ export async function reviewOrganizationSignupAction(
 
   let organizationId: string | null = request.organization_id ?? null;
 
-  // Provision the organization when approving (only if not already created)
   if (parsed.data.status === "approved" && !organizationId) {
     const slug = await resolveUniqueSlug(
       admin,
@@ -152,6 +150,30 @@ export async function reviewOrganizationSignupAction(
     }
 
     organizationId = org.id;
+  }
+
+  if (parsed.data.status === "approved" && organizationId) {
+    const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/auth/finish?next=/dashboard`;
+    const inviteEmail = request.contact_email.trim().toLowerCase();
+
+    const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(inviteEmail, {
+      redirectTo,
+      data: {
+        full_name: request.contact_name.trim(),
+        role: "technician",
+        org_id: organizationId,
+      },
+    });
+
+    if (inviteError) {
+      if (inviteError.message.toLowerCase().includes("already")) {
+        return {
+          error: "The requester already has an account. Please invite a different email or handle this user manually.",
+        };
+      }
+
+      return { error: `Failed to send invite link: ${inviteError.message}` };
+    }
   }
 
   const { error } = await admin
@@ -194,7 +216,6 @@ async function resolveUniqueSlug(
     return candidate;
   }
 
-  // Append a short random suffix to make it unique
   const suffix = Math.random().toString(36).slice(2, 6);
   return `${candidate}-${suffix}`;
 }
