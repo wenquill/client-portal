@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/actions/auth";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { LogOut, User } from "lucide-react";
 
 interface UserMenuProps {
@@ -74,6 +75,10 @@ export function UserMenu({ fullName, email, avatarUrl, compact = false }: UserMe
             <User className="mr-2 h-4 w-4" />
             Profile
           </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <ThemeToggle />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
