@@ -3,6 +3,39 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+async function finalizeAuthorizedSession(
+  supabase: ReturnType<typeof createServerClient>,
+  origin: string,
+  next: string,
+) {
+  const admin = createAdminClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+  }
+
+  const invitedOrgId = user.user_metadata?.["org_id"];
+  const { data: existingProfile } = await admin
+    .from("users")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const isInvited = typeof invitedOrgId === "string" || Boolean(existingProfile);
+
+  if (!isInvited) {
+    await supabase.auth.signOut();
+    await admin.auth.admin.deleteUser(user.id);
+    return NextResponse.redirect(`${origin}/login?error=invite_required`);
+  }
+
+  return NextResponse.redirect(`${origin}${next}`);
+}
 
 
 export async function GET(request: NextRequest) {
@@ -33,12 +66,16 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${next}`);
+    if (!error) {
+      return finalizeAuthorizedSession(supabase, origin, next);
+    }
   }
 
   if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
-    if (!error) return NextResponse.redirect(`${origin}${next}`);
+    if (!error) {
+      return finalizeAuthorizedSession(supabase, origin, next);
+    }
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth_failed`);
