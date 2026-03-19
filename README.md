@@ -31,17 +31,6 @@ The Client Portal is a comprehensive solution for organizations to:
 - **Organization Switching** - Switch between organizations you have access to
 - **User Profiles** - Manage profile information and password
 
-### User Experience
-- **Dark/Light Mode Toggle** - Customize theme preferences (system, light, dark)
-- **Keyboard Shortcuts** - Power user shortcuts for efficient navigation:
-  - **j** - Navigate down through tickets
-  - **k** - Navigate up through tickets
-  - **c** - Create new ticket
-  - **?** - Show keyboard shortcuts dialog
-- **Loading Skeletons** - Smooth loading states with skeleton screens
-- **Toast Notifications** - User-friendly feedback for all actions
-- **Responsive Design** - Works seamlessly on desktop and mobile
-
 ### Authentication & Security
 - **Supabase Auth** - Magic link authentication (no password required initially)
 - **Session Management** - Automatic session handling across tabs
@@ -56,8 +45,6 @@ The Client Portal is a comprehensive solution for organizations to:
 - **UI Components**: Shadcn/UI + Tailwind CSS 4 + CVA
 - **Forms**: React Hook Form + Zod validation
 - **Query Management**: TanStack React Query
-- **Typography**: Montserrat (Google Fonts)
-- **Icons**: Lucide React
 
 ## Prerequisites
 
@@ -120,7 +107,7 @@ npm start
 ### For Clients
 1. **Sign In** - Use the "Portal sign in" tab with your email (magic link sent)
 2. **View Dashboard** - See your organization overview and ticket counts
-3. **Create Ticket** - Click "New ticket" or press `c` to report an issue
+3. **Update Ticket Status** - Select ticket and change the status
 4. **Track Tickets** - View all your tickets with filtering and search
 5. **View Profile** - Manage your profile and set a password
 
@@ -128,6 +115,7 @@ npm start
 All client features plus:
 1. **Edit Tickets** - Update status, priority, and assignments
 2. **Comments** - Add comments to tickets for team communication
+3. **Create Ticket** - Click "New ticket"
 3. **Ticket Assignment** - Assign tickets to yourself or team members
 
 ### For Admins
@@ -135,7 +123,6 @@ All technician features plus:
 1. **Admin Panel** - Access admin controls for organization management
 2. **Review Requests** - Approve/reject organization access requests
 3. **Invite Users** - Send invites to users for organizations
-4. **View Access Logs** - See who has access to organizations
 
 ## Database Migrations
 
