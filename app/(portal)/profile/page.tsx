@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SetPasswordForm } from "@/components/profile/set-password-form";
+import { UpdateProfileForm } from "@/components/profile/update-profile-form";
 
 export const metadata: Metadata = { title: "Profile" };
 
@@ -43,6 +44,18 @@ export default async function ProfilePage() {
               {profile.role}
             </span>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Edit profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UpdateProfileForm
+            initialFullName={profile.full_name ?? ""}
+            initialAvatarUrl={profile.avatar_url ?? ""}
+          />
         </CardContent>
       </Card>
 
