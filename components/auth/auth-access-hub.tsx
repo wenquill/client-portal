@@ -56,7 +56,7 @@ export function AuthAccessHub({ activeSection, activeOrganizationSection = "requ
           <div className="rounded-2xl border bg-card p-2 shadow-sm">
             <TabsList className="grid h-auto w-full grid-cols-2">
               <TabsTrigger value="portal" className="py-2">Portal sign in</TabsTrigger>
-              <TabsTrigger value="organization" className="py-2">Organization requests</TabsTrigger>
+              <TabsTrigger value="organization" className="py-2">Create organization</TabsTrigger>
             </TabsList>
 
             <TabsContent value="portal" className="pt-5">

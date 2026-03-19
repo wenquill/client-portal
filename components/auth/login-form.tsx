@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { canUseMagicLinkSignIn } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -44,6 +45,13 @@ export function LoginForm() {
   });
 
   async function onMagicLink(values: MagicLinkForm) {
+      const accessCheck = await canUseMagicLinkSignIn(values.email);
+
+      if (!accessCheck.allowed) {
+        toast.error(accessCheck.error);
+        return;
+      }
+
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email: values.email,
@@ -122,7 +130,7 @@ export function LoginForm() {
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Sign in</TabsTrigger>
-            <TabsTrigger value="access">Get access</TabsTrigger>
+            <TabsTrigger value="access">Sign up</TabsTrigger>
           </TabsList>
 
           <TabsContent value="signin" className="pt-3">
